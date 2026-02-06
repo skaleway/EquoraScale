@@ -52,7 +52,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ toast: toastHandlers }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-6 right-6 z-200 flex flex-col gap-3 pointer-events-none">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onClose={() => removeToast(t.id)} />
         ))}
@@ -92,7 +92,7 @@ const ToastItem: React.FC<{ toast: Toast; onClose: () => void }> = ({ toast, onC
   const v = variants[toast.type];
 
   return (
-    <div className={`pointer-events-auto flex items-center min-w-[300px] max-w-md p-4 rounded-2xl border shadow-2xl animate-in slide-in-from-right-full duration-300 backdrop-blur-md ${v.bg} ${v.border}`}>
+    <div className={`pointer-events-auto flex items-center min-w-75 max-w-md p-4 rounded-2xl border shadow-2xl animate-in slide-in-from-right-full duration-300 backdrop-blur-md ${v.bg} ${v.border}`}>
       <div className="mr-3 shrink-0">{v.icon}</div>
       <p className={`flex-1 text-sm font-bold tracking-tight ${v.text}`}>{toast.message}</p>
       <button 
