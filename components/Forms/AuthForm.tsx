@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../../constants';
+import { useToast } from '../UI/Toast';
+
 
 interface AuthFormProps {
   onLogin: (usernameOrEmail: string, password: string) => Promise<void>;
@@ -9,6 +11,7 @@ interface AuthFormProps {
 
 const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,10 +28,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
     setIsSubmitting(true);
     try {
       await onLogin(username, password);
+      toast.success(`Welcome back ${username}. Login successful.`);
       navigate('/app');
     } catch (err: any) {
       const message = err?.message || 'Login failed. Please verify your credentials.';
       setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

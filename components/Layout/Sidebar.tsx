@@ -3,6 +3,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { DocumentType, User } from '../../types';
 import { Icons } from '../../constants';
+import { useToast } from '../UI/Toast';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -11,6 +12,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onLogout, user }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const menuItems = [
     { id: 'ALL', path: '/app/repository/ALL', label: 'Dashboard', icon: Icons.LayoutGrid },
@@ -70,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, user }) => {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate uppercase">{user?.role || 'User'}</p>
           </div>
           <button 
-            onClick={() => { onLogout(); navigate('/login'); }}
+            onClick={() => { onLogout(); toast.info('You have been logged out.'); navigate('/login'); }}
             className="ml-auto p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
           >
             <Icons.Plus className="w-5 h-5 rotate-45" />
