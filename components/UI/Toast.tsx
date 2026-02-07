@@ -92,12 +92,12 @@ const ToastItem: React.FC<{ toast: Toast; onClose: () => void }> = ({ toast, onC
   const v = variants[toast.type];
 
   return (
-    <div className={`pointer-events-auto flex items-center min-w-75 max-w-md p-4 rounded-2xl border shadow-2xl animate-in slide-in-from-right-full duration-300 backdrop-blur-md ${v.bg} ${v.border}`}>
-      <div className="mr-3 shrink-0">{v.icon}</div>
-      <p className={`flex-1 text-sm font-bold tracking-tight ${v.text}`}>{toast.message}</p>
+    <div className={`pointer-events-auto flex items-center min-w-80 max-w-lg p-5 rounded-2xl border shadow-2xl animate-in slide-in-from-right-full duration-300 backdrop-blur-md ${v.bg} ${v.border}`}>
+      <div className="mr-4 shrink-0">{v.icon}</div>
+      <p className={`flex-1 text-base font-bold tracking-tight ${v.text}`}>{toast.message}</p>
       <button 
         onClick={onClose}
-        className="ml-4 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-400 transition-colors"
+        className="ml-4 p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-400 transition-colors"
       >
         <Icons.Plus className="w-4 h-4 rotate-45" />
       </button>

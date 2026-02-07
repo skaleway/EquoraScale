@@ -35,16 +35,18 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file }) => {
           const arrayBuffer = await file.arrayBuffer();
           loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         } else if (typeof file === 'string') {
-          // Handle blob URL or regular URL
+          // Signed/public URL: fetch to ArrayBuffer to avoid CORS/range issues
           try {
-            // Try to load as URL first
-            loadingTask = pdfjsLib.getDocument(file);
-          } catch (urlErr) {
-            // If blob URL is invalid, try to fetch it
-            console.warn("Blob URL may have expired, attempting fallback:", urlErr);
-            setError("PDF preview is temporarily unavailable. This can happen after page reload with blob URLs. Please re-select the file.");
-            setLoading(false);
-            return;
+            const resp = await fetch(file);
+            if (!resp.ok) {
+              throw new Error(`Failed to fetch PDF: ${resp.status}`);
+            }
+            const arrayBuffer = await resp.arrayBuffer();
+            loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          } catch (fetchErr) {
+            console.warn('PDF fetch failed, falling back to direct URL:', fetchErr);
+            // Fallback: allow pdf.js to handle URL (may still fail if CORS blocked)
+            loadingTask = pdfjsLib.getDocument({ url: file });
           }
         } else {
           setError("Unsupported file format provided to PDF viewer.");

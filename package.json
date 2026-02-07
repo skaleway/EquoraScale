@@ -11,10 +11,15 @@
   "dependencies": {
     "@google/genai": "^1.38.0",
     "@tanstack/react-query": "^5.90.20",
+    "groq-sdk": "^0.37.0",
     "lucide-react": "^0.563.0",
+    "jszip": "^3.10.1",
+    "file-saver": "^2.0.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.2.0"
+    "react-router-dom": "^7.2.0",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

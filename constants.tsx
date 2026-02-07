@@ -32,7 +32,7 @@ export const DOC_TYPE_COLORS = {
   RFQ: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
   PO: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
   QUOTATION: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400',
-  INVOICE: 'bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+  INVOICE: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
   GENERAL: 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
 };
 

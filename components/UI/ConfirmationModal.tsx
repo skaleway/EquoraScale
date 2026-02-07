@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Icons } from '../../constants';
 
 interface ConfirmationModalProps {
@@ -10,6 +10,9 @@ interface ConfirmationModalProps {
   message: string;
   confirmText?: string;
   variant?: 'danger' | 'warning' | 'info';
+  requireText?: string;
+  inputLabel?: string;
+  inputPlaceholder?: string;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -19,9 +22,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   title,
   message,
   confirmText = 'Confirm',
-  variant = 'danger'
+  variant = 'danger',
+  requireText,
+  inputLabel = 'Type to confirm',
+  inputPlaceholder = ''
 }) => {
   if (!isOpen) return null;
+  const [typedValue, setTypedValue] = useState('');
+  const isMatch = !requireText || typedValue === requireText;
 
   const colors = {
     danger: 'bg-rose-600 hover:bg-rose-700 shadow-rose-200 dark:shadow-rose-900/20',
@@ -36,9 +44,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="relative bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-md p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-slate-900 rounded-4xl w-full max-w-md p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${iconColors[variant]}`}>
           <Icons.Settings className="w-7 h-7" />
         </div>
@@ -46,6 +54,20 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
           {message}
         </p>
+        {requireText && (
+          <div className="mb-6">
+            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">
+              {inputLabel}
+            </label>
+            <input
+              type="text"
+              value={typedValue}
+              onChange={(e) => setTypedValue(e.target.value)}
+              placeholder={inputPlaceholder || requireText}
+              className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        )}
         <div className="flex space-x-4">
           <button 
             onClick={onClose}
@@ -54,8 +76,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             Cancel
           </button>
           <button 
-            onClick={() => { onConfirm(); onClose(); }}
-            className={`flex-1 py-3.5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${colors[variant]}`}
+            onClick={() => { if (isMatch) { onConfirm(); onClose(); } }}
+            disabled={!isMatch}
+            className={`flex-1 py-3.5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${colors[variant]}`}
           >
             {confirmText}
           </button>

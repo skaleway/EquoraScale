@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FileRecord, FileStatus, DocumentType } from '../../types';
 import { Icons, STATUS_COLORS, DOC_TYPE_COLORS } from '../../constants';
 import PdfViewer from './PdfViewer';
+import { getSignedFileUrl } from '../../services/files';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface FileDetailModalProps {
   file: FileRecord;
@@ -10,7 +13,8 @@ interface FileDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAnalyze: (file: FileRecord) => Promise<void>;
-  onAsk: (question: string) => Promise<string>;
+  onAskStream: (question: string, onDelta: (chunk: string) => void) => Promise<void>;
+  onDownload: (fileId: string, fileName: string) => void;
   isProcessing: boolean;
 }
 
@@ -20,17 +24,42 @@ const FileDetailModal: React.FC<FileDetailModalProps> = ({
   isOpen,
   onClose,
   onAnalyze,
-  onAsk,
+  onAskStream,
+  onDownload,
   isProcessing
 }) => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [viewerUrl, setViewerUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf || rawFile) {
+      setViewerUrl(undefined);
+      return;
+    }
+
+    const currentUrl = file.blobUrl;
+    setViewerUrl(currentUrl);
+
+    if (!currentUrl) {
+      (async () => {
+        try {
+          const data = await getSignedFileUrl(file.id);
+          setViewerUrl(data.signedUrl);
+        } catch (err) {
+          console.warn('Failed to fetch signed URL', err);
+        }
+      })();
+    }
+  }, [file, isOpen, rawFile]);
 
   if (!isOpen) return null;
 
@@ -44,8 +73,17 @@ const FileDetailModal: React.FC<FileDetailModalProps> = ({
     setIsChatLoading(true);
 
     try {
-      const answer = await onAsk(userMsg);
-      setChatHistory(prev => [...prev, { role: 'ai', text: answer }]);
+      setChatHistory(prev => [...prev, { role: 'ai', text: '' }]);
+      await onAskStream(userMsg, (chunk) => {
+        setChatHistory(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (lastIdx >= 0 && next[lastIdx].role === 'ai') {
+            next[lastIdx] = { ...next[lastIdx], text: next[lastIdx].text + chunk };
+          }
+          return next;
+        });
+      });
     } catch (err) {
       setChatHistory(prev => [...prev, { role: 'ai', text: "I encountered a technical interruption. Please verify your connection and try again." }]);
     } finally {
@@ -53,59 +91,60 @@ const FileDetailModal: React.FC<FileDetailModalProps> = ({
     }
   };
 
-  /**
-   * Formats raw AI text into clean, accessible React elements.
-   * Handles bolding (**text**), lists (* item), and paragraphs.
-   */
-  const renderFormattedText = (text: string) => {
-    const lines = text.split('\n');
-    let inList = false;
-    const elements: React.ReactNode[] = [];
-
-    lines.forEach((line, index) => {
-      const trimmedLine = line.trim();
-      
-      // Process bolding within a line
-      const processBold = (str: string) => {
-        const parts = str.split(/(\*\*.*?\*\*)/g);
-        return parts.map((part, i) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
-            return (
-              <strong key={i} className="font-black text-slate-900 dark:text-white">
-                {part.slice(2, -2)}
-              </strong>
-            );
-          }
-          return part;
-        });
-      };
-
-      // Handle list items
-      if (trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
-        const content = trimmedLine.slice(2);
-        elements.push(
-          <li key={`list-${index}`} className="ml-5 mb-2 list-disc pl-2">
-            {processBold(content)}
-          </li>
-        );
-        inList = true;
-      } else if (trimmedLine === '') {
-        // Empty lines act as paragraph breaks
-        elements.push(<div key={`gap-${index}`} className="h-3" />);
-        inList = false;
-      } else {
-        // Regular paragraphs
-        elements.push(
-          <p key={`p-${index}`} className="mb-2 last:mb-0">
-            {processBold(trimmedLine)}
-          </p>
-        );
-        inList = false;
-      }
-    });
-
-    return <div className="space-y-1">{elements}</div>;
-  };
+  const renderFormattedText = (text: string) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+        strong: ({ children }) => (
+          <strong className="font-black text-slate-900 dark:text-white">{children}</strong>
+        ),
+        ul: ({ children }) => <ul className="ml-5 mb-2 list-disc pl-2 space-y-1">{children}</ul>,
+        ol: ({ children }) => <ol className="ml-5 mb-2 list-decimal pl-2 space-y-1">{children}</ol>,
+        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+        table: ({ children }) => (
+          <div className="overflow-x-auto my-3">
+            <table className="w-full text-left border-collapse text-[13px]">
+              {children}
+            </table>
+          </div>
+        ),
+        thead: ({ children }) => (
+          <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            {children}
+          </thead>
+        ),
+        tbody: ({ children }) => (
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {children}
+          </tbody>
+        ),
+        tr: ({ children }) => <tr className="align-top">{children}</tr>,
+        th: ({ children }) => (
+          <th className="px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b border-slate-200 dark:border-slate-700">
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td className="px-3 py-2 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800">
+            {children}
+          </td>
+        ),
+        code: ({ children }) => (
+          <code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[12px]">
+            {children}
+          </code>
+        ),
+        blockquote: ({ children }) => (
+          <blockquote className="border-l-4 border-slate-200 dark:border-slate-700 pl-4 italic text-slate-600 dark:text-slate-300">
+            {children}
+          </blockquote>
+        ),
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
 
   const isPdf = file.name.toLowerCase().endsWith('.pdf');
   const docClassification = file.isClassifying ? 'Classifying...' : file.docType;
@@ -143,6 +182,13 @@ const FileDetailModal: React.FC<FileDetailModalProps> = ({
               {(isProcessing || file.isClassifying) ? 'Syncing...' : 'Deep Analysis'}
             </button>
             <button 
+              onClick={() => onDownload(file.id, file.name)}
+              className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+              title="Download"
+            >
+              <Icons.Download className="w-5 h-5" />
+            </button>
+            <button 
               onClick={onClose}
               className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl text-slate-500 transition-all"
             >
@@ -159,8 +205,8 @@ const FileDetailModal: React.FC<FileDetailModalProps> = ({
             <div className="flex-1 relative overflow-hidden">
               {isPdf && rawFile ? (
                 <PdfViewer file={rawFile} />
-              ) : isPdf && file.blobUrl ? (
-                <PdfViewer file={file.blobUrl} />
+              ) : isPdf && viewerUrl ? (
+                <PdfViewer file={viewerUrl} />
               ) : file.content ? (
                 <div className="h-full overflow-y-auto p-12 bg-white dark:bg-slate-900">
                   <div className="max-w-4xl mx-auto bg-slate-50 dark:bg-slate-800/50 p-10 rounded-4xl border border-slate-100 dark:border-slate-700 font-mono text-sm leading-relaxed whitespace-pre-wrap dark:text-slate-300">
@@ -200,7 +246,7 @@ const FileDetailModal: React.FC<FileDetailModalProps> = ({
                   <>
                     {file.summary && (
                       <div className="p-6 rounded-3xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30">
-                        <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-3">AI Abstract</p>
+                      <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-3">AI Summary</p>
                         <p className="text-[15px] text-slate-700 dark:text-slate-200 font-medium leading-relaxed italic">"{file.summary}"</p>
                       </div>
                     )}

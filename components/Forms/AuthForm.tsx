@@ -1,35 +1,59 @@
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../../constants';
 import { useToast } from '../UI/Toast';
+import { AuthContext } from '../../contexts/AuthContext';
+
 
 
 interface AuthFormProps {
-  onLogin: (usernameOrEmail: string, password: string) => Promise<void>;
+  onLogin: (usernameOrEmail: string, password: string) => Promise<import('../../types').User>;
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
-      setError('Invalid credentials. Please enter your enterprise details.');
+    const nextErrors: { username?: string; password?: string } = {};
+    if (!username.trim()) {
+      nextErrors.username = 'Username or email is required.';
+    }
+    if (!password) {
+      nextErrors.password = 'Password is required.';
+    } else {
+      if (password.length < 6) {
+        nextErrors.password = 'Password must be at least 6 characters long.';
+      } else if (!/(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
+        nextErrors.password = 'Password must contain at least one letter, one number, and one special character.';
+      }
+    }
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setError('Please correct the highlighted fields.');
       return;
     }
     setError('');
     setIsSubmitting(true);
     try {
-      await onLogin(username, password);
-      toast.success(`Welcome back ${username}. Login successful.`);
-      navigate('/app');
+      const profile = await onLogin(username, password);
+      toast.success(`Welcome back ${profile.username || username}.`);
+      const role = profile?.role || user?.role;
+      console.log('Logged in user role:', role);
+      if (role === 'admin') {
+        navigate('/admin/overview');
+      } else {
+        navigate('/app/repository/ALL');
+      }
     } catch (err: any) {
       const message = err?.message || 'Login failed. Please verify your credentials.';
       setError(message);
@@ -80,11 +104,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
                 </div>
                 <input 
                   type="text" 
-                  className="w-full pl-12 pr-5 py-4 bg-slate-900/50 border border-indigo-500/30 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 text-white outline-none"
+                  className={`w-full pl-12 pr-5 py-4 bg-slate-900/50 border rounded-2xl focus:ring-2 focus:ring-indigo-500/20 text-white outline-none ${fieldErrors.username ? 'border-rose-500/60' : 'border-indigo-500/30'}`}
                   placeholder="username or email"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
+                {fieldErrors.username && (
+                  <p className="text-[11px] text-rose-400 mt-2 font-semibold">{fieldErrors.username}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -95,11 +122,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
                 </div>
                 <input 
                   type={showPassword ? "text" : "password"}
-                  className="w-full pl-12 pr-12 py-4 bg-slate-900/50 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 text-white outline-none"
+                  className={`w-full pl-12 pr-12 py-4 bg-slate-900/50 border rounded-2xl focus:ring-2 focus:ring-indigo-500/20 text-white outline-none ${fieldErrors.password ? 'border-rose-500/60' : 'border-slate-800'}`}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                {fieldErrors.password && (
+                  <p className="text-[11px] text-rose-400 mt-2 font-semibold">{fieldErrors.password}</p>
+                )}
               </div>
               <div className="flex justify-end">
                 <button type="button" className="text-[13px] font-bold text-indigo-400 hover:text-indigo-300">Forgot password?</button>

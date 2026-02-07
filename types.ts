@@ -30,10 +30,22 @@ export interface FileRecord {
   isClassifying?: boolean; // Flag to show "Classifying..." in UI
 }
 
+export interface FolderRecord {
+  id: number;
+  name: string;
+  isRoot?: boolean;
+  parent?: { id: number } | null;
+}
+
 export interface User {
   id: string;
   username: string;
   role: 'admin' | 'user';
+  email?: string | null;
+  is_active?: boolean;
+  metadata?: Record<string, any> | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AppState {

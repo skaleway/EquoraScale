@@ -1,17 +1,21 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getProfileDetails, UserProfile } from '../../services/auth'; // Adjust path as needed
-import { 
-  User, 
-  Mail, 
-  Shield, 
-  Activity, 
-  Calendar, 
-  Clock, 
-  Fingerprint, 
-  Terminal, 
-  CheckCircle2, 
-  XCircle 
+import { useNavigate } from 'react-router-dom';
+import { getProfileDetails, UserProfile } from '../../services/auth';
+import { AuthContext } from '../../contexts/AuthContext';
+import ConfirmationModal from '../UI/ConfirmationModal';
+import { useToast } from '../UI/Toast';
+import {
+  User,
+  Mail,
+  Shield,
+  Activity,
+  Calendar,
+  Clock,
+  Fingerprint,
+  Terminal,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 
 const formatDate = (value?: string) => {
@@ -36,6 +40,11 @@ const SettingsPage: React.FC = () => {
     queryFn: getProfileDetails,
     staleTime: 1000 * 60 * 5,
   });
+  const navigate = useNavigate();
+  const { logout } = React.useContext(AuthContext);
+  const { toast } = useToast();
+  const [isLogoutOpen, setIsLogoutOpen] = React.useState(false);
+
 
   if (isLoading) return <LoadingState />;
   if (isError) return <ErrorState error={error} />;
@@ -43,7 +52,7 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-4 md:p-4 font-sans selection:bg-indigo-500/20">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -54,6 +63,7 @@ const SettingsPage: React.FC = () => {
               Manage your personal details and security preferences.
             </p>
           </div>
+
           <div className="px-3 py-1 rounded-full bg-slate-200/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 backdrop-blur-sm">
             <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
               <span className="relative flex h-2 w-2">
@@ -67,19 +77,19 @@ const SettingsPage: React.FC = () => {
 
         {data && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            
+
             {/* 1. Hero Profile Card (Spans 8 columns) */}
             <div className="md:col-span-8 relative group overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
               {/* Decorative Gradient Background */}
-              <div className="absolute top-0 left-0 w-full h-32 bg-blue-500 pacity-90" />
-              
+              <div className="absolute top-0 left-0 w-full h-32 bg-blue-500 opacity-90" />
+
               <div className="relative pt-20 px-8 pb-8">
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-end">
                   {/* Avatar */}
                   <div className="w-24 h-24 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center text-2xl font-black shadow-xl ring-4 ring-white dark:ring-slate-900">
                     {getInitials(data.username)}
                   </div>
-                  
+
                   {/* Name & Badge */}
                   <div className="flex-1 mb-2">
                     <div className="flex items-center gap-3">
@@ -103,19 +113,25 @@ const SettingsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InfoItem 
-                    icon={Fingerprint} 
-                    label="User ID" 
-                    value={data.id} 
-                    copyable 
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <InfoItem
+                    icon={Fingerprint}
+                    label="User ID"
+                    value={data.id}
+                    copyable
                   />
-                  <InfoItem 
-                    icon={Shield} 
-                    label="Role Access" 
-                    value={data.role} 
-                    highlight 
+                  <InfoItem
+                    icon={Shield}
+                    label="Role Access"
+                    value={data.role}
+                    highlight
                   />
+                  <button
+                    onClick={() => setIsLogoutOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-xs font-black uppercase tracking-widest border border-rose-100 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
+                  >
+                    Log out
+                  </button>
                 </div>
               </div>
             </div>
@@ -149,6 +165,7 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
 
+
             {/* 3. Timeline Stats (Spans 4 columns) */}
             <div className="md:col-span-4 rounded-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Timeline</h3>
@@ -174,41 +191,54 @@ const SettingsPage: React.FC = () => {
 
             {/* 4. Metadata Terminal (Spans 8 columns) */}
             <div className="md:col-span-8 rounded-2xl bg-slate-900 dark:bg-black border border-slate-800 dark:border-slate-800  overflow-hidden shadow-lg">
-               <div className="bg-slate-800/50 dark:bg-slate-900 px-4 py-2 flex items-center gap-2 border-b border-slate-700/50">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                  </div>
-                  <span className="ml-2 text-[10px] font-mono text-slate-400 flex items-center gap-1">
-                    <Terminal className="w-3 h-3" /> user_metadata.json
-                  </span>
-               </div>
-               <div className="p-6 overflow-x-auto">
-                 <pre className="font-mono text-xs md:text-sm text-emerald-400/90 leading-relaxed">
-                   {data.metadata ? JSON.stringify(data.metadata, null, 2) : '// No additional metadata found'}
-                 </pre>
-               </div>
+              <div className="bg-slate-800/50 dark:bg-slate-900 px-4 py-2 flex items-center gap-2 border-b border-slate-700/50">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                </div>
+                <span className="ml-2 text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                  <Terminal className="w-3 h-3" /> user_metadata.json
+                </span>
+              </div>
+              <div className="p-6 overflow-x-auto">
+                <pre className="font-mono text-xs md:text-sm text-emerald-400/90 leading-relaxed">
+                  {data.metadata ? JSON.stringify(data.metadata, null, 2) : '// No additional metadata found'}
+                </pre>
+              </div>
             </div>
 
           </div>
         )}
       </div>
+      <ConfirmationModal
+        isOpen={isLogoutOpen}
+        onClose={() => setIsLogoutOpen(false)}
+        onConfirm={() => {
+          logout();
+          toast.info('You have been logged out.');
+          navigate('/login');
+        }}
+        title="Log Out?"
+        message="You will be signed out of Eqorascale and returned to the login screen."
+        confirmText="Log out"
+        variant="danger"
+      />
     </div>
   );
 };
 
 // --- Sub Components ---
 
-const InfoItem = ({ 
-  icon: Icon, 
-  label, 
-  value, 
+const InfoItem = ({
+  icon: Icon,
+  label,
+  value,
   highlight = false,
   copyable = false
-}: { 
-  icon: any, 
-  label: string, 
+}: {
+  icon: any,
+  label: string,
   value?: string | number,
   highlight?: boolean,
   copyable?: boolean
@@ -245,7 +275,7 @@ const ErrorState = ({ error }: { error: any }) => (
       <p className="text-sm text-slate-500 mb-6">
         {String((error as any)?.message || 'An unexpected error occurred while fetching your profile.')}
       </p>
-      <button 
+      <button
         onClick={() => window.location.reload()}
         className="px-6 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold hover:opacity-90 transition-opacity"
       >
