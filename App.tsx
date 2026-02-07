@@ -110,7 +110,7 @@ const App: React.FC = () => {
           <Routes>
             {/* Public Section */}
             <Route element={<PublicLayout />}>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<LandingPage onStart={() => window.location.href = '/login'} />} />
             </Route>
 
             {/* Auth Section */}

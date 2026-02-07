@@ -37,7 +37,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
       <section className="pt-40 pb-24 px-6 relative overflow-hidden text-center">
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs font-bold uppercase tracking-widest mb-8 border border-indigo-100 dark:border-indigo-800">Supply Chain Intelligence</div>
-          <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1]">Master your Supply Chain with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">AI Precision.</span></h1>
+          <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-none">Master your Supply Chain with <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-violet-600">AI Precision.</span></h1>
           <p className="text-xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto">Enterprise-grade document management for industrial sectors. Automate RFQs, POs, and Invoices with AI intelligence.</p>
           <div className="flex justify-center space-x-6">
             <button onClick={() => navigate('/login')} className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center group">Enter Dashboard <Icons.ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" /></button>
