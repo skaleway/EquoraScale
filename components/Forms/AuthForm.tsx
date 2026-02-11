@@ -142,7 +142,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
               className="w-full h-16 bg-linear-to-r from-indigo-600 to-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-600/20 hover:scale-[1.01] transition-all flex items-center justify-center group disabled:opacity-60"
             >
               {isSubmitting ? 'Signing in...' : 'Login'}{' '}
-              <Icons.ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1" />
+              {isSubmitting ? (
+                <span className="ml-3 inline-block w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              ) : (
+                <Icons.ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              )}
             </button>
           </form>
           <div className="mt-12 text-center text-slate-500 text-sm font-medium">If you need an account, contact your system admin.</div>

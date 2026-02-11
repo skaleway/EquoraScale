@@ -13,6 +13,7 @@ import AdminOverview from './components/Admin/AdminOverview';
 import AdminUsers from './components/Admin/AdminUsers';
 import UnauthorizedView from './components/Admin/UnauthorizedView';
 import AdminUserDetails from './components/Admin/AdminUserDetails';
+import AdminStorageUsage from './components/Admin/AdminStorageUsage';
 import { AuthContext } from './contexts/AuthContext';
 import AnalyticsView from './components/Dashboard/AnalyticsView';
 
@@ -172,6 +173,7 @@ const App: React.FC = () => {
               <Route path="overview" element={<AdminOverview />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="users/:id" element={<AdminUserDetails />} />
+              <Route path="storage" element={<AdminStorageUsage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
 

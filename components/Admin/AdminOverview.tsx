@@ -130,6 +130,7 @@ const AdminOverview: React.FC = () => {
 
   const activePercent = stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0;
 
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       
@@ -235,7 +236,11 @@ const AdminOverview: React.FC = () => {
         <div className="space-y-6">
           
           {/* Storage Summary Card */}
-          <div className="bg-slate-900 dark:bg-indigo-950 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden">
+          <div
+            className="bg-slate-900 dark:bg-indigo-950 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden cursor-pointer"
+            onClick={() => navigate('/admin/storage')}
+            title="View storage usage by user"
+          >
              {/* Background Pattern */}
              <div className="absolute top-0 right-0 p-4 opacity-10">
                 <Database className="w-32 h-32 transform rotate-12" />
@@ -262,6 +267,7 @@ const AdminOverview: React.FC = () => {
                 </div>
              </div>
           </div>
+
 
           {/* Infrastructure Health */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
